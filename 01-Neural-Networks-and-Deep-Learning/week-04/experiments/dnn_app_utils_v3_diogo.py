@@ -455,3 +455,23 @@ def print_mislabeled_images(classes, X, y, p):
         plt.imshow(X[:,index].reshape(64,64,3), interpolation='nearest')
         plt.axis('off')
         plt.title("Prediction: " + classes[int(p[0,index])].decode("utf-8") + " \n Class: " + classes[y[0,index]].decode("utf-8"))
+
+
+
+def accuracy(X, y, parameters):
+    m = X.shape[1]
+    n = len(parameters) // 2 # number of layers in the neural network
+    p = np.zeros((1,m))
+    
+    probas, caches = L_model_forward(X, parameters)
+
+    for i in range(0, probas.shape[1]):
+        if probas[0,i] > 0.5:
+            p[0,i] = 1
+        else:
+            p[0,i] = 0
+    
+    accuracy = np.sum((p == y)/m)
+    # print("Accuracy: "  + str(accuracy))
+        
+    return accuracy
