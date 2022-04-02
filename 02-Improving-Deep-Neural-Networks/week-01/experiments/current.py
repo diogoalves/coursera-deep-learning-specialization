@@ -671,9 +671,8 @@ def gradient_check_n(parameters, gradients, X, Y, layer_dims, epsilon=1e-7, prin
     """
     
     # Set-up variables
-    parameters_values, _ = dictionary_to_vector(parameters)
-    
-    grad = gradients_to_vector(gradients)
+    parameters_values = parameters_to_vector(parameters, layer_dims)
+    grad = gradients_to_vector(gradients, layer_dims)
     num_parameters = parameters_values.shape[0]
     J_plus = np.zeros((num_parameters, 1))
     J_minus = np.zeros((num_parameters, 1))
@@ -687,14 +686,14 @@ def gradient_check_n(parameters, gradients, X, Y, layer_dims, epsilon=1e-7, prin
         theta_plus = np.copy(parameters_values)
         theta_plus[i] = theta_plus[i] + epsilon
         # Two steps to get cost
-        AL, _ = L_model_forward(X, vector_to_dictionary(theta_plus, layer_dims))
+        AL, _ = L_model_forward(X, vector_to_parameters(theta_plus, layer_dims))
         cost = compute_cost(AL, Y)
         J_plus[i] = cost
         
         # Compute J_minus[i]. Inputs: "parameters_values, epsilon". Output = "J_minus[i]".
         theta_minus = np.copy(parameters_values)
         theta_minus[i] = theta_minus[i] - epsilon
-        AL, _ = L_model_forward(X, vector_to_dictionary(theta_minus, layer_dims))
+        AL, _ = L_model_forward(X, vector_to_parameters(theta_minus, layer_dims))
         cost = compute_cost(AL, Y)
         J_minus[i] = cost
         

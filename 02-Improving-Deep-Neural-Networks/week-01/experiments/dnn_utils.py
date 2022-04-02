@@ -166,28 +166,25 @@ def accuracy(X, y, parameters):
 
 ################################################################################
 
-def dictionary_to_vector(parameters):
+def gradients_to_vector(gradients, layer_dims):
     """
-    Roll all our parameters dictionary into a single vector satisfying our specific required shape.
+    Roll all our gradients dictionary into a single vector satisfying our specific required shape.
     """
-    keys = []
+    
+    L = len(layer_dims)
+    vector = None
     count = 0
-    for key in parameters.keys():
-        
-        # flatten parameter
-        new_vector = np.reshape(parameters[key], (-1, 1))
-        keys = keys + [key] * new_vector.shape[0]
-        
+    for l in range(1, L):
         if count == 0:
-            theta = new_vector
+            vector = np.reshape(gradients['dW' + str(l)], (-1, 1))
+            count += 1
         else:
-            theta = np.concatenate((theta, new_vector), axis=0)
-        count = count + 1
+            vector = np.concatenate((vector, np.reshape(gradients['dW' + str(l)], (-1, 1))), axis=0)
+        vector = np.concatenate((vector, np.reshape(gradients['db' + str(l)], (-1, 1))), axis=0)
 
-    return theta, keys
+    return vector
 
-
-def vector_to_dictionary(theta, layer_dims):
+def vector_to_gradients(vector, layer_dims):
     """
     Unroll all our parameters dictionary from a single vector satisfying our specific required shape.
     """
@@ -201,8 +198,50 @@ def vector_to_dictionary(theta, layer_dims):
         n_cols = layer_dims[l-1]
         W_end = cursor + (n_rows * n_cols)
         B_end = W_end + n_rows
-        parameters['W' + str(l)] = theta[cursor : W_end].reshape((n_rows, n_cols))
-        parameters['b' + str(l)] = theta[W_end: B_end].reshape((n_rows, 1))
+        parameters['dW' + str(l)] = vector[cursor : W_end].reshape((n_rows, n_cols))
+        parameters['db' + str(l)] = vector[W_end: B_end].reshape((n_rows, 1))
+        cursor = B_end
+
+        assert(parameters['dW' + str(l)].shape == (layer_dims[l], layer_dims[l-1]))
+        assert(parameters['db' + str(l)].shape == (layer_dims[l], 1))
+
+
+    return parameters
+
+
+def parameters_to_vector(parameters, layer_dims):
+    """
+    Roll all our parameters dictionary into a single vector satisfying our specific required shape.
+    """
+    L = len(layer_dims)
+    vector = None
+    count = 0
+    for l in range(1, L):
+        if count == 0:
+            vector = np.reshape(parameters['W' + str(l)], (-1, 1))
+            count += 1
+        else:
+            vector = np.concatenate((vector, np.reshape(parameters['W' + str(l)], (-1, 1))), axis=0)
+        vector = np.concatenate((vector, np.reshape(parameters['b' + str(l)], (-1, 1))), axis=0)
+
+    return vector
+
+def vector_to_parameters(vector, layer_dims):
+    """
+    Unroll all our parameters dictionary from a single vector satisfying our specific required shape.
+    """
+    parameters = {}
+
+    L = len(layer_dims)            # number of layers in the network
+
+    cursor = 0
+    for l in range(1, L):
+        n_rows = layer_dims[l]
+        n_cols = layer_dims[l-1]
+        W_end = cursor + (n_rows * n_cols)
+        B_end = W_end + n_rows
+        parameters['W' + str(l)] = vector[cursor : W_end].reshape((n_rows, n_cols))
+        parameters['b' + str(l)] = vector[W_end: B_end].reshape((n_rows, 1))
         cursor = B_end
 
         assert(parameters['W' + str(l)].shape == (layer_dims[l], layer_dims[l-1]))
@@ -210,23 +249,3 @@ def vector_to_dictionary(theta, layer_dims):
 
 
     return parameters
-    
-def gradients_to_vector(gradients):
-    """
-    Roll all our gradients dictionary into a single vector satisfying our specific required shape.
-    """
-    
-    count = 0
-    for key in gradients.keys() :
-        if 'dW' in key or 'db' in key:
-            print(key)
-            # flatten parameter
-            new_vector = np.reshape(gradients[key], (-1, 1))
-            
-            if count == 0:
-                theta = new_vector
-            else:
-                theta = np.concatenate((theta, new_vector), axis=0)
-            count = count + 1
-
-    return theta
